@@ -6,6 +6,8 @@ import streamlit as st
 import pandas as pd
 from st_aggrid import AgGrid, GridOptionsBuilder
 from st_aggrid import AgGrid, GridOptionsBuilder, GridUpdateMode, DataReturnMode
+from st_aggrid import GridOptionsBuilder, AgGrid, GridUpdateMode, DataReturnMode
+from st_aggrid.shared import ColumnsAutoSizeMode
 import streamlit as st
 import pandas as pd
 from st_aggrid import AgGrid, GridOptionsBuilder
@@ -27,11 +29,13 @@ def generate_sales_data():
 
         # Create a more complex dataset
         df = pd.DataFrame({
-            'Product ID': range(1, rows + 1),
+            'Product_ID': range(1, rows + 1),
             'City': np.random.choice(['Karachi', 'Islamabad', 'Quata', 'Pishawar'], rows),
             'Category': np.random.choice(['Electronics', 'Clothing', 'Home', 'Sports'], rows),
-            'Base Price': np.random.uniform(10, 500, rows).round(2),
-            'Quantity Sold': np.random.randint(1, 100, rows),
+            'Sale_person': np.random.choice(['Fahim', 'Aamir', 'Zahir', 'Asim'], rows),
+            'Base_Price': np.random.uniform(10, 500, rows).round(2),
+            'Quantity_Sold': np.random.randint(1, 100, rows),
+            'commission': np.random.randint(100, 1000, rows),
         })
 
         return df
@@ -42,8 +46,8 @@ def configure_grid_options(df):
         gb = GridOptionsBuilder.from_dataframe(df)
         # Configure row grouping and aggregation
         gb.configure_column("allColumns", filter=True)
-#        for column in df.columns:
- #           gb.configure_column(column, filter=True)
+        for column in df.columns:
+            gb.configure_column(column, filter=True)
 
         gb.configure_default_column(
                     groupable=True,
@@ -59,46 +63,20 @@ def configure_grid_options(df):
                     suppressColumnMoveAnimation=False,
                     suppressRowClickSelection=False
                 )
-        # Make some columns editable
-#        gb.configure_columns(['Base Price', 'Quantity Sold'], editable=True)
-
-        # Add a virtual column (This will be calculated on the client side)
-#        gb.configure_column(
-#            'Total Revenue',
-#            valueGetter="Number(data['Base Price']) * Number(data['Quantity Sold'])",
-#            cellRenderer="agAnimateShowChangeCellRenderer",
-#            type=["numericColumn"],
-#            editable=False,
-#            valueFormatter="x.toLocaleString('en-US', {style: 'currency', currency: 'USD'})"
- #       )
         
         return gb.build()
-
-
-    # Generate data
 sales_data = generate_sales_data()
 
-
-
-
-    #testing 
-
-
-
-    # Configure grid options
 grid_options = configure_grid_options(sales_data)
 gb = GridOptionsBuilder()
-gb.configure_default_column(
-                    groupable=True,
-                    value=True,
-                    enableRowGroup=True,
-                    aggFunc='sum'
-                )
+gb.configure_default_column( groupable=True,value=True,enableRowGroup=True,aggFunc='sum'  )
 
                 # Add filter and sort options
 gb.configure_grid_options(
                     enableRangeSelection=True,
                     enableRangeHandle=True,
+                    allColumnsfilter=True,
+                    #gob.configure_column("allColumns", filter=True)
                     suppressColumnMoveAnimation=False,
                     suppressRowClickSelection=False)
 gb.build()
@@ -117,12 +95,50 @@ st.markdown("""
 
 
     # AgGrid with custom options
-ag_return = AgGrid(
+mfa = AgGrid(
         sales_data,
         gridOptions=grid_options,
         height=500,
         theme='alpine',
         allow_unsafe_jscode=True,
+        update_mode=GridUpdateMode.MODEL_CHANGED,
+        #update_mode=GridUpdateMode.GRID_CHANGED,
+        data_return_mode=DataReturnMode.FILTERED_AND_SORTED,
         fit_columns_on_grid_load=True,
+        width =2900 ,
         reload_data=False
     )
+
+
+if st.button('Check availability'):
+    st.write(mfa['data'])
+    mfa4 =mfa['data']
+    st.write(mfa['columns_state'])
+    fild = pd.DataFrame(mfa['columns_state'])
+    #fild2= fild[["colid"]]
+    st.write(fild)
+    
+    #above_35= fild[fild["hide"] == 'False']
+    #above_35= fild["hide"] 
+    #above_36= fild["colId"] 
+    #st.write(above_35)
+    #st.write(above_36)
+    #list_from_df = above_36.values.tolist()
+    #list_from_column = df['numbers'].tolist()
+    #list_from_column = fild["colId"].tolist()
+    #st.write(above_36.to_string(index=False))
+    #st.write(list_from_df)
+    #st.write(list_from_column)
+    
+    #fild["hide"] = fild["hide"].astype(int) 
+    #fild = fild[fild["hide"]==0 ]
+    #list_from_df2 = fild["colId"].values.tolist()
+    #st.write("muhammad is the best ")
+    #st.write(fild)
+    #st.write(list_from_df2)
+    
+    #mfa5 = mfa4[list_from_column]
+    #mfa6 = mfa4[list_from_df2]
+    
+    #st.write(mfa5)
+    #st.write(mfa6)
